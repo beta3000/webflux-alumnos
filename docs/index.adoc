@@ -178,15 +178,17 @@ package "Dominio" {
     +activar(): void
     +desactivar(): void
     +actualizarEdad(Integer): void
+    +validar(): void
     +toString(): String
     +equals(Object): boolean
     +hashCode(): int
     --
-    Validaciones:
-    +validarId(): void
-    +validarNombre(): void
-    +validarApellido(): void
-    +validarEdad(): void
+    Validaciones de Dominio:
+    -validarId(): void
+    -validarNombre(): void
+    -validarApellido(): void
+    -validarEdad(): void
+    -validarEstado(): void
   }
 
   enum Estado {
@@ -270,6 +272,16 @@ end note
 - `activar()`: Cambia el estado del alumno a ACTIVO
 - `desactivar()`: Cambia el estado del alumno a INACTIVO
 - `actualizarEdad()`: Actualiza la edad del alumno con validación
+- `validar()`: Ejecuta todas las validaciones de dominio para garantizar la integridad
+
+==== Arquitectura No-Anémica
+
+El modelo de dominio implementa el patrón de **Rich Domain Model** donde:
+
+- Las validaciones están encapsuladas en el propio objeto de dominio
+- Los métodos de negocio (`estaActivo()`, `activar()`, `desactivar()`) están en el dominio
+- La lógica de validación se centraliza en el método `validar()` que puede ser invocado por los servicios
+- Se mantiene la integridad de los invariantes del dominio
 
 == Casos de Uso y Flujos de Operación
 
@@ -831,8 +843,27 @@ Spring Boot Actuator proporciona endpoints para monitoreo:
 - `/actuator/health`: Estado de salud de la aplicación
 - `/actuator/metrics`: Métricas de la aplicación
 - `/actuator/info`: Información de la aplicación
+- `/actuator/env`: Variables de entorno y configuración
+- `/actuator/loggers`: Gestión dinámica de niveles de logging
 
-=== Logs
+==== Configuración de Actuator
+
+```yaml
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env,loggers
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when_authorized
+  info:
+    env:
+      enabled: true
+```
+
+=== Logs Estructurados
 
 La aplicación utiliza SLF4J con Logback para logging estructurado:
 
@@ -843,8 +874,16 @@ logging:
     root: INFO
     rodriguez.ciro.webfluxalumnos: DEBUG
   pattern:
-    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    console: '%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%logger{36}] - %msg%n'
+    file: '%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%logger{36}] - %msg%n'
 ----
+
+Este patrón proporciona:
+- Timestamp con formato ISO
+- Información del thread
+- Nivel de log con formato fijo
+- Logger con longitud controlada
+- Mensaje estructurado
 
 == Consideraciones de Rendimiento
 
