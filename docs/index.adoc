@@ -1,4 +1,4 @@
-= WebFlux Alumnos
+= WebFlux Alumnos - Documentación Completa
 Ciro Rodriguez <ciro@example.com>
 :revnumber: v1.0
 :toc: left
@@ -7,97 +7,867 @@ Ciro Rodriguez <ciro@example.com>
 :source-highlighter: highlightjs
 :doctype: book
 
-== Resumen
+== Resumen del Proyecto
 
-Aplicación Spring Boot WebFlux para gestión de alumnos con R2DBC + H2 y Liquibase.
+WebFlux Alumnos es una aplicación Spring Boot reactiva para la gestión de estudiantes que implementa los principios de arquitectura hexagonal y programación reactiva.
 
-- Arquitectura hexagonal (puertos/adaptadores)
-- WebFlux/Reactor (Mono/Flux)
-- Persistencia reactiva con R2DBC
-- Migraciones con Liquibase
-- Calidad de código: Spotless, SpotBugs/FindSecBugs
-- Cobertura con JaCoCo
+=== Características Principales
 
-== Arquitectura
+- *Arquitectura Hexagonal*: Separación clara entre dominio, aplicación e infraestructura
+- *Programación Reactiva*: Spring WebFlux con Mono/Flux para operaciones no bloqueantes
+- *Persistencia Reactiva*: R2DBC con base de datos H2 en memoria
+- *Migraciones de Base de Datos*: Liquibase para control de versiones del esquema
+- *Calidad de Código*: Integración con Spotless, SpotBugs/FindSecBugs y JaCoCo
+- *Documentación*: AsciiDoc con diagramas PlantUML
 
-El sistema sigue una arquitectura hexagonal con casos de uso en aplicación y adaptadores de entrada/salida.
+=== Tecnologías Utilizadas
 
-[plantuml, arquitectura, png]
+[cols="2,3,2"]
+|===
+|Categoría |Tecnología |Versión
+
+|Framework
+|Spring Boot
+|3.5.4
+
+|Programación Reactiva
+|Spring WebFlux
+|Incluido en Spring Boot
+
+|Base de Datos
+|H2 Database
+|Runtime
+
+|ORM Reactivo
+|Spring Data R2DBC
+|Incluido en Spring Boot
+
+|Migraciones
+|Liquibase
+|Incluido en Spring Boot
+
+|Testing
+|JUnit 5 + Reactor Test
+|Incluido en Spring Boot
+
+|Calidad de Código
+|Spotless + SpotBugs
+|2.43.0 / 4.8.3.0
+
+|Cobertura
+|JaCoCo
+|0.8.12
+
+|Documentación API
+|SpringDoc OpenAPI
+|2.7.0
+|===
+
+== Arquitectura del Sistema
+
+=== Visión General de la Arquitectura Hexagonal
+
+[plantuml, arquitectura-hexagonal, png]
 ----
 @startuml
 skinparam componentStyle rectangle
-package "Aplicación" {
-  [CrearAlumnoService]
-  [ObtenerAlumnosActivosService]
+skinparam backgroundColor #F8F9FA
+skinparam component {
+  BackgroundColor #E3F2FD
+  BorderColor #1976D2
 }
+
+package "Capa de Dominio" as domain #FFE0B2 {
+  component [Alumno] as domainModel #FFF3E0
+  component [Estado] as estado #FFF3E0
+  component [AlumnoInvalidoException] as domainExc1 #FFEBEE
+  component [AlumnoYaExisteException] as domainExc2 #FFEBEE
+}
+
+package "Capa de Aplicación" as application #E8F5E8 {
+  component [CrearAlumnoUseCase] as createUC #F1F8E9
+  component [ObtenerAlumnosActivosUseCase] as getUC #F1F8E9
+  component [CrearAlumnoService] as createSrv #E8F5E8
+  component [ObtenerAlumnosActivosService] as getSrv #E8F5E8
+  component [AlumnoRepositoryPort] as repoPort #F3E5F5
+}
+
+package "Capa de Infraestructura" as infrastructure #E3F2FD {
+  package "Adaptadores de Entrada" as inAdapters #F8BBD9 {
+    component [AlumnoController] as controller #FCE4EC
+    component [GlobalExceptionHandler] as exHandler #FCE4EC
+    component [AlumnoRequestDTO] as reqDTO #FCE4EC
+    component [AlumnoResponseDTO] as resDTO #FCE4EC
+  }
+  
+  package "Adaptadores de Salida" as outAdapters #E1F5FE {
+    component [AlumnoRepositoryAdapter] as repoAdapter #E0F2F1
+    component [AlumnoEntity] as entity #E0F2F1
+    component [AlumnoR2dbcRepository] as r2dbcRepo #E0F2F1
+  }
+}
+
+' Relaciones de la capa de aplicación
+controller --> createSrv
+controller --> getSrv
+createSrv ..|> createUC
+getSrv ..|> getUC
+createSrv --> repoPort
+getSrv --> repoPort
+
+' Relaciones de dominio
+createSrv --> domainModel
+getSrv --> domainModel
+domainModel --> estado
+createSrv --> domainExc1
+createSrv --> domainExc2
+
+' Relaciones de persistencia
+repoAdapter ..|> repoPort
+repoAdapter --> entity
+repoAdapter --> r2dbcRepo
+
+' Relaciones de DTOs
+controller --> reqDTO
+controller --> resDTO
+controller --> exHandler
+
+note top of domain : "Núcleo del negocio\nLibre de dependencias externas"
+note top of application : "Casos de uso\nOrquesta dominio e infraestructura"
+note left of inAdapters : "Adaptadores de entrada\nWeb Controllers, DTOs"
+note right of outAdapters : "Adaptadores de salida\nRepositorios, Entidades"
+
+@enduml
+----
+
+=== Flujo de Arquitectura Hexagonal
+
+La arquitectura hexagonal (también conocida como arquitectura de puertos y adaptadores) organiza el código en capas concéntricas:
+
+1. *Dominio (Centro)*: Contiene la lógica de negocio pura
+2. *Aplicación*: Orquesta los casos de uso
+3. *Infraestructura*: Adaptadores para comunicación externa
+
+== Modelo de Dominio Detallado
+
+=== Diagrama de Clases del Dominio
+
+[plantuml, dominio-detallado, png]
+----
+@startuml
+skinparam class {
+  BackgroundColor #E8F5E8
+  BorderColor #4CAF50
+}
+
 package "Dominio" {
-  [Alumno]
-  [Excepciones]
+  class Alumno {
+    -Long id
+    -String nombre
+    -String apellido
+    -Estado estado
+    -Integer edad
+    --
+    +Alumno(Long, String, String, Estado, Integer)
+    +getId(): Long
+    +getNombre(): String
+    +getApellido(): String
+    +getEstado(): Estado
+    +getEdad(): Integer
+    +estaActivo(): boolean
+    +activar(): void
+    +desactivar(): void
+    +actualizarEdad(Integer): void
+    +toString(): String
+    +equals(Object): boolean
+    +hashCode(): int
+    --
+    Validaciones:
+    +validarId(): void
+    +validarNombre(): void
+    +validarApellido(): void
+    +validarEdad(): void
+  }
+
+  enum Estado {
+    ACTIVO("Activo")
+    INACTIVO("Inactivo")
+    --
+    -String descripcion
+    --
+    +Estado(String)
+    +getDescripcion(): String
+  }
+  
+  class AlumnoInvalidoException {
+    +AlumnoInvalidoException(String)
+  }
+  
+  class AlumnoYaExisteException {
+    +AlumnoYaExisteException(String)
+  }
 }
-package "Entrada (Web)" {
-  [AlumnoController]
-  [GlobalExceptionHandler]
-}
-package "Salida (Persistencia)" {
-  [AlumnoRepositoryAdapter]
-  [AlumnoEntity]
-  [AlumnoR2dbcRepository]
-}
-[AlumnoController] --> [CrearAlumnoService]
-[AlumnoController] --> [ObtenerAlumnosActivosService]
-[CrearAlumnoService] --> [AlumnoRepositoryAdapter]
-[ObtenerAlumnosActivosService] --> [AlumnoRepositoryAdapter]
-[AlumnoRepositoryAdapter] --> [AlumnoR2dbcRepository]
-[AlumnoRepositoryAdapter] --> [AlumnoEntity]
+
+Alumno --> Estado : estado
+Alumno ..> AlumnoInvalidoException : throws
+Alumno ..> AlumnoYaExisteException : throws
+
+note right of Alumno::validarId
+  Valida que el ID sea positivo
+  y no nulo
+end note
+
+note right of Alumno::validarNombre
+  Valida que el nombre no sea
+  nulo, vacío o solo espacios
+end note
+
+note right of Alumno::validarApellido
+  Valida que el apellido no sea
+  nulo, vacío o solo espacios  
+end note
+
+note right of Alumno::validarEdad
+  Valida que la edad esté entre
+  16 y 100 años
+end note
+
 @enduml
 ----
 
-== Modelo de Dominio
+=== Reglas de Negocio
 
-[plantuml, dominio, png]
+==== Validaciones del Dominio
+
+[cols="2,4,2"]
+|===
+|Campo |Reglas de Validación |Excepción
+
+|ID
+|Debe ser un número positivo (> 0) y no nulo
+|AlumnoInvalidoException
+
+|Nombre
+|No puede ser nulo, vacío o contener solo espacios en blanco
+|AlumnoInvalidoException
+
+|Apellido
+|No puede ser nulo, vacío o contener solo espacios en blanco
+|AlumnoInvalidoException
+
+|Edad
+|Debe estar entre 16 y 100 años (inclusive)
+|AlumnoInvalidoException
+
+|Estado
+|Debe ser ACTIVO o INACTIVO
+|AlumnoInvalidoException
+|===
+
+==== Comportamientos del Dominio
+
+- `estaActivo()`: Determina si el alumno está en estado ACTIVO
+- `activar()`: Cambia el estado del alumno a ACTIVO
+- `desactivar()`: Cambia el estado del alumno a INACTIVO
+- `actualizarEdad()`: Actualiza la edad del alumno con validación
+
+== Casos de Uso y Flujos de Operación
+
+=== Caso de Uso: Crear Alumno
+
+[plantuml, secuencia-crear-alumno, png]
 ----
 @startuml
-class Alumno {
-  +Long id
-  +String nombre
-  +String apellido
-  +Estado estado
-  +Integer edad
+skinparam participant {
+  BackgroundColor #E3F2FD
+  BorderColor #1976D2
 }
 
-enum Estado {
-  ACTIVO
-  INACTIVO
-}
+actor "Cliente" as client
+participant "AlumnoController" as controller
+participant "CrearAlumnoService" as service
+participant "AlumnoRepositoryAdapter" as adapter
+participant "AlumnoR2dbcRepository" as repository
+database "H2 Database" as db
+
+client -> controller: POST /api/alumnos\n{AlumnoRequestDTO}
+
+activate controller
+controller -> controller: validar DTO
+controller -> service: crearAlumno(alumno)
+
+activate service
+service -> service: validar dominio
+service -> adapter: existePorId(id)
+
+activate adapter
+adapter -> repository: existsById(id)
+activate repository
+repository -> db: SELECT COUNT(*) FROM alumnos WHERE id = ?
+db --> repository: 0
+repository --> adapter: false
+deactivate repository
+adapter --> service: false
+deactivate adapter
+
+service -> adapter: guardar(alumno)
+activate adapter
+adapter -> adapter: convertir a AlumnoEntity
+adapter -> repository: save(entity)
+activate repository
+repository -> db: INSERT INTO alumnos VALUES (...)
+db --> repository: AlumnoEntity
+repository --> adapter: AlumnoEntity
+deactivate repository
+adapter -> adapter: convertir a Alumno
+adapter --> service: Alumno
+deactivate adapter
+
+service --> controller: Alumno
+deactivate service
+controller -> controller: convertir a AlumnoResponseDTO
+controller --> client: 200 OK\n{AlumnoResponseDTO}
+deactivate controller
+
+note over service: Si el ID ya existe,\nlanza AlumnoYaExisteException
+
+note over service: Si los datos son inválidos,\nlanza AlumnoInvalidoException
+
 @enduml
 ----
 
-== Endpoints
+=== Caso de Uso: Obtener Alumnos Activos
 
-[plantuml, endpoints, png]
+[plantuml, secuencia-obtener-activos, png]
 ----
 @startuml
-skinparam ArrowColor #4e79a7
-skinparam ActorStyle awesome
-actor Usuario
-rectangle API {
-  Usuario -> (POST /alumnos)
-  Usuario -> (GET /alumnos?page=&size=)
+skinparam participant {
+  BackgroundColor #E8F5E8
+  BorderColor #4CAF50
 }
+
+actor "Cliente" as client
+participant "AlumnoController" as controller
+participant "ObtenerAlumnosActivosService" as service
+participant "AlumnoRepositoryAdapter" as adapter
+participant "AlumnoR2dbcRepository" as repository
+database "H2 Database" as db
+
+client -> controller: GET /api/alumnos/activos\n?page=1&size=10
+
+activate controller
+controller -> controller: validar parámetros\n(page >= 1, size > 0)
+controller -> service: obtenerAlumnosActivos(page, size)
+
+activate service
+service -> service: calcular offset\n(page - 1) * size
+service -> adapter: obtenerAlumnosActivos(offset, size)
+
+activate adapter
+adapter -> repository: findByEstado(Estado.ACTIVO, offset, limit)
+activate repository
+repository -> db: SELECT * FROM alumnos\nWHERE estado = 'ACTIVO'\nLIMIT ? OFFSET ?
+db --> repository: List<AlumnoEntity>
+repository --> adapter: Flux<AlumnoEntity>
+deactivate repository
+adapter -> adapter: convertir a Flux<Alumno>
+adapter --> service: Flux<Alumno>
+deactivate adapter
+
+service --> controller: Flux<Alumno>
+deactivate service
+controller -> controller: convertir a Flux<AlumnoResponseDTO>
+controller --> client: 200 OK\nFlux<AlumnoResponseDTO>
+deactivate controller
+
+note over controller: Si page < 1,\nlanza ParametrosInvalidosException
+
+note over service: Retorna Flux vacío\nsi no hay alumnos activos
+
 @enduml
 ----
 
-== Errores y manejo global
+=== Manejo de Errores
 
-- ALUMNO_INVALIDO: validaciones de dominio o IllegalArgumentException
-- ALUMNO_YA_EXISTE: creación con ID duplicado
-- PARAMETROS_INVALIDOS: parámetros de request inválidos (ServerWebInputException)
-- DATOS_INVALIDOS: errores de binding/JSON
-- ERROR_INTERNO: fallback
+[plantuml, flujo-errores, png]
+----
+@startuml
+skinparam activity {
+  BackgroundColor #FFEBEE
+  BorderColor #D32F2F
+}
 
-== Configuración y build
+start
 
-- Java 17, Spring Boot 3.5.4
-- Ejecutar tests y verificación: `./mvnw verify`
-- Generar cobertura: se publica en `target/site/jacoco/index.html`
+:Request llega al Controller;
+
+if (¿Parámetros válidos?) then (no)
+  :Lanzar ServerWebInputException;
+  :GlobalExceptionHandler\ncaptura excepción;
+  :Retornar ErrorResponse\nPARAMETROS_INVALIDOS;
+  stop
+endif
+
+:Invocar Service;
+
+if (¿Datos de dominio válidos?) then (no)
+  :Lanzar AlumnoInvalidoException;
+  :GlobalExceptionHandler\ncaptura excepción;
+  :Retornar ErrorResponse\nALUMNO_INVALIDO;
+  stop
+endif
+
+if (¿Alumno ya existe?) then (sí)
+  :Lanzar AlumnoYaExisteException;
+  :GlobalExceptionHandler\ncaptura excepción;
+  :Retornar ErrorResponse\nALUMNO_YA_EXISTE;
+  stop
+endif
+
+if (¿Error de binding JSON?) then (sí)
+  :Lanzar WebExchangeBindException;
+  :GlobalExceptionHandler\ncaptura excepción;
+  :Retornar ErrorResponse\nDATOS_INVALIDOS;
+  stop
+endif
+
+if (¿Error interno?) then (sí)
+  :Lanzar Exception genérica;
+  :GlobalExceptionHandler\ncaptura excepción;
+  :Retornar ErrorResponse\nERROR_INTERNO;
+  stop
+endif
+
+:Procesar exitosamente;
+:Retornar respuesta válida;
+
+stop
+
+@enduml
+----
+
+== Base de Datos y Persistencia
+
+=== Esquema de Base de Datos
+
+[plantuml, esquema-bd, png]
+----
+@startuml
+skinparam entity {
+  BackgroundColor #E0F2F1
+  BorderColor #00695C
+}
+
+entity "alumnos" {
+  * id : BIGINT <<PK>>
+  --
+  * nombre : VARCHAR(255)
+  * apellido : VARCHAR(255)
+  * estado : VARCHAR(20)
+  * edad : INTEGER
+}
+
+note right of alumnos::estado
+  Valores permitidos:
+  - 'ACTIVO'
+  - 'INACTIVO'
+end note
+
+note right of alumnos::edad
+  Rango válido: 16-100
+end note
+
+@enduml
+----
+
+=== Configuración de Liquibase
+
+El proyecto utiliza Liquibase para el control de versiones del esquema de base de datos.
+
+==== Estructura de Archivos de Migración
+
+```
+src/main/resources/db/
+├── changelog/
+│   ├── db.changelog-master.yaml          # Archivo principal
+│   ├── 001-create-alumnos-table.yaml     # Creación de tabla
+│   └── alumnos-data.csv                  # Datos de ejemplo
+```
+
+==== Configuración de R2DBC
+
+La aplicación está configurada para usar R2DBC con H2:
+
+```yaml
+spring:
+  r2dbc:
+    url: r2dbc:h2:mem:///testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password: ""
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+```
+
+== API REST Detallada
+
+=== Endpoints Disponibles
+
+[plantuml, api-endpoints, png]
+----
+@startuml
+skinparam usecase {
+  BackgroundColor #E8F5E8
+  BorderColor #4CAF50
+}
+
+actor "Cliente HTTP" as client
+
+rectangle "API REST /api/alumnos" {
+  usecase "POST /api/alumnos\nCrear Alumno" as create
+  usecase "GET /api/alumnos/activos\nObtener Alumnos Activos" as getActive
+}
+
+client --> create
+client --> getActive
+
+note right of create
+  Content-Type: application/json
+  Body: AlumnoRequestDTO
+  Response: AlumnoResponseDTO
+end note
+
+note right of getActive
+  Query Params:
+  - page: número de página (>=1)
+  - size: elementos por página (>0)
+  Response: Flux<AlumnoResponseDTO>
+end note
+
+@enduml
+----
+
+=== Documentación de DTOs
+
+==== AlumnoRequestDTO
+
+[source,json]
+----
+{
+  "id": 1,
+  "nombre": "Juan",
+  "apellido": "Pérez",
+  "estado": "ACTIVO",
+  "edad": 25
+}
+----
+
+[cols="2,2,3,2"]
+|===
+|Campo |Tipo |Descripción |Validación
+
+|id
+|Long
+|Identificador único del alumno
+|Requerido, > 0
+
+|nombre
+|String
+|Nombre del alumno
+|Requerido, no vacío
+
+|apellido
+|String
+|Apellido del alumno
+|Requerido, no vacío
+
+|estado
+|String
+|Estado del alumno
+|"ACTIVO" o "INACTIVO"
+
+|edad
+|Integer
+|Edad del alumno
+|16-100 años
+|===
+
+==== AlumnoResponseDTO
+
+[source,json]
+----
+{
+  "id": 1,
+  "nombre": "Juan",
+  "apellido": "Pérez",
+  "estado": "ACTIVO",
+  "edad": 25
+}
+----
+
+=== Ejemplos de Uso de la API
+
+==== Crear un Nuevo Alumno
+
+[source,bash]
+----
+curl -X POST "http://localhost:8080/api/alumnos" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": 100,
+    "nombre": "María",
+    "apellido": "González",
+    "estado": "ACTIVO",
+    "edad": 22
+  }'
+----
+
+*Respuesta exitosa (200 OK):*
+[source,json]
+----
+{
+  "id": 100,
+  "nombre": "María",
+  "apellido": "González",
+  "estado": "ACTIVO",
+  "edad": 22
+}
+----
+
+==== Obtener Alumnos Activos (Paginado)
+
+[source,bash]
+----
+curl "http://localhost:8080/api/alumnos/activos?page=1&size=5"
+----
+
+*Respuesta exitosa (200 OK):*
+[source,json]
+----
+[
+  {
+    "id": 1,
+    "nombre": "Juan",
+    "apellido": "Pérez",
+    "estado": "ACTIVO",
+    "edad": 25
+  },
+  {
+    "id": 2,
+    "nombre": "Ana",
+    "apellido": "López",
+    "estado": "ACTIVO",
+    "edad": 23
+  }
+]
+----
+
+=== Códigos de Error Estandarizados
+
+[cols="2,3,2,3"]
+|===
+|Código |Descripción |HTTP Status |Ejemplo de Causa
+
+|ALUMNO_INVALIDO
+|Datos del alumno no válidos
+|400
+|Edad fuera del rango 16-100
+
+|ALUMNO_YA_EXISTE
+|ID de alumno duplicado
+|409
+|Intentar crear alumno con ID existente
+
+|PARAMETROS_INVALIDOS
+|Parámetros de request inválidos
+|400
+|page=0 (debe ser >=1)
+
+|DATOS_INVALIDOS
+|Error en binding/parsing JSON
+|400
+|JSON malformado
+
+|ERROR_INTERNO
+|Error interno del servidor
+|500
+|Excepción no controlada
+|===
+
+== Configuración y Despliegue
+
+=== Configuración de la Aplicación
+
+La aplicación se configura principalmente a través de `application.yaml`:
+
+[source,yaml]
+----
+server:
+  port: 8080
+
+spring:
+  application:
+    name: webflux-alumnos
+    
+  r2dbc:
+    url: r2dbc:h2:mem:///testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password: ""
+    
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    rodriguez.ciro.webfluxalumnos: DEBUG
+    org.springframework.r2dbc: DEBUG
+----
+
+=== Requisitos del Sistema
+
+[cols="2,3"]
+|===
+|Componente |Versión Mínima
+
+|Java
+|17+
+
+|Maven
+|3.9+
+
+|Memoria RAM
+|512 MB
+
+|Espacio en Disco
+|100 MB
+|===
+
+=== Comandos de Build y Ejecución
+
+==== Compilación y Testing
+
+[source,bash]
+----
+# Ejecutar todas las pruebas
+./mvnw clean test
+
+# Verificación completa (tests, format, análisis estático)
+./mvnw clean verify
+
+# Aplicar formato de código
+./mvnw spotless:apply
+----
+
+==== Ejecución de la Aplicación
+
+[source,bash]
+----
+# Ejecutar en modo desarrollo
+./mvnw spring-boot:run
+
+# Generar JAR ejecutable
+./mvnw clean package
+
+# Ejecutar JAR
+java -jar target/webflux-alumnos-0.0.1-SNAPSHOT.jar
+----
+
+==== Generación de Documentación
+
+[source,bash]
+----
+# Generar documentación HTML con diagramas
+./mvnw -Pdocs clean prepare-package
+
+# Los archivos se generan en:
+# - target/docs/index.html
+# - target/docs/diagrams/*.png
+----
+
+== Testing y Calidad
+
+=== Estrategia de Testing
+
+La aplicación incluye 98 pruebas que cubren:
+
+- *Pruebas Unitarias*: Validación de lógica de dominio
+- *Pruebas de Integración*: Testing de controladores y repositorios
+- *Pruebas de Capa*: Verificación de cada capa de la arquitectura
+
+=== Cobertura de Código
+
+La cobertura se mide con JaCoCo y se reporta en `target/site/jacoco/index.html`.
+
+Objetivos de cobertura:
+- Líneas: >90%
+- Ramas: >85%
+- Métodos: >95%
+
+=== Herramientas de Calidad
+
+==== Spotless (Formato de Código)
+
+- *Google Java Format*: Formato consistente de código Java
+- *Prettier*: Formato de archivos YAML
+- *XML Formatting*: Formato de archivos XML
+
+==== SpotBugs + FindSecBugs
+
+- *Análisis Estático*: Detección de bugs potenciales
+- *Análisis de Seguridad*: Identificación de vulnerabilidades
+- *Configuración*: `spotbugs-include.xml`, `spotbugs-exclude.xml`
+
+== Monitoreo y Observabilidad
+
+=== Actuator Endpoints
+
+Spring Boot Actuator proporciona endpoints para monitoreo:
+
+- `/actuator/health`: Estado de salud de la aplicación
+- `/actuator/metrics`: Métricas de la aplicación
+- `/actuator/info`: Información de la aplicación
+
+=== Logs
+
+La aplicación utiliza SLF4J con Logback para logging estructurado:
+
+[source,yaml]
+----
+logging:
+  level:
+    root: INFO
+    rodriguez.ciro.webfluxalumnos: DEBUG
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+----
+
+== Consideraciones de Rendimiento
+
+=== Programación Reactiva
+
+La aplicación utiliza principios reactivos para:
+
+- *No-bloqueo*: Operaciones asíncronas que no bloquean threads
+- *Backpressure*: Manejo de flujo de datos
+- *Composición*: Combinación de operaciones reactivas
+
+=== Optimizaciones de Base de Datos
+
+- *R2DBC*: Driver reactivo para acceso no-bloqueante a BD
+- *Connection Pooling*: Pool de conexiones para mejor rendimiento
+- *Paginación*: Limitación de resultados para consultas grandes
+
+=== Métricas de Rendimiento
+
+Indicadores clave a monitorear:
+
+- Latencia de respuesta (P95, P99)
+- Throughput (requests/segundo)
+- Utilización de memoria
+- Conexiones de base de datos activas
 
