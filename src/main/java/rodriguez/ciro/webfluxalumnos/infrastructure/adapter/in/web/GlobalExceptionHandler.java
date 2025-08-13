@@ -18,12 +18,14 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(AlumnoYaExisteException.class)
   public ResponseEntity<Map<String, Object>> handleAlumnoYaExiste(AlumnoYaExisteException ex) {
+    logger.error("Alumno ya existe: ", ex);
     return ResponseEntity.status(HttpStatus.CONFLICT)
         .body(createErrorResponse("ALUMNO_YA_EXISTE", ex.getMessage()));
   }
 
   @ExceptionHandler(AlumnoInvalidoException.class)
   public ResponseEntity<Map<String, Object>> handleAlumnoInvalido(AlumnoInvalidoException ex) {
+    logger.error("Alumno inválido: ", ex);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
         .body(createErrorResponse("ALUMNO_INVALIDO", ex.getMessage()));
   }
@@ -44,6 +46,7 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(IllegalArgumentException.class)
   public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex) {
+    logger.error("Argumento ilegal: ", ex);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
         .body(createErrorResponse("PARAMETROS_INVALIDOS", ex.getMessage()));
   }
