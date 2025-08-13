@@ -1,5 +1,5 @@
-= WebFlux Alumnos - Documentación Completa
-Ciro Rodriguez <ciro@example.com>
+= WebFlux Alumnos - Documentación
+Ciro Rodriguez <ciro.julio.rodriguez.valerio@example.com>
 :revnumber: v1.0
 :toc: left
 :sectnums:
@@ -99,7 +99,7 @@ package "Capa de Infraestructura" as infrastructure #E3F2FD {
     component [AlumnoRequestDTO] as reqDTO #FCE4EC
     component [AlumnoResponseDTO] as resDTO #FCE4EC
   }
-  
+
   package "Adaptadores de Salida" as outAdapters #E1F5FE {
     component [AlumnoRepositoryAdapter] as repoAdapter #E0F2F1
     component [AlumnoEntity] as entity #E0F2F1
@@ -168,12 +168,18 @@ package "Dominio" {
     -Estado estado
     -Integer edad
     --
+    +Alumno()
     +Alumno(Long, String, String, Estado, Integer)
     +getId(): Long
+    +setId(Long): void
     +getNombre(): String
+    +setNombre(String): void
     +getApellido(): String
+    +setApellido(String): void
     +getEstado(): Estado
+    +setEstado(Estado): void
     +getEdad(): Integer
+    +setEdad(Integer): void
     +estaActivo(): boolean
     +activar(): void
     +desactivar(): void
@@ -184,11 +190,11 @@ package "Dominio" {
     +hashCode(): int
     --
     Validaciones de Dominio:
-    -validarId(): void
-    -validarNombre(): void
-    -validarApellido(): void
-    -validarEdad(): void
-    -validarEstado(): void
+    -validarId(Long): void
+    -validarNombre(String): void
+    -validarApellido(String): void
+    -validarEdad(Integer): void
+    -validarEstado(Estado): void
   }
 
   enum Estado {
@@ -200,11 +206,11 @@ package "Dominio" {
     +Estado(String)
     +getDescripcion(): String
   }
-  
+
   class AlumnoInvalidoException {
     +AlumnoInvalidoException(String)
   }
-  
+
   class AlumnoYaExisteException {
     +AlumnoYaExisteException(String)
   }
@@ -226,12 +232,12 @@ end note
 
 note right of Alumno::validarApellido
   Valida que el apellido no sea
-  nulo, vacío o solo espacios  
+  nulo, vacío o solo espacios
 end note
 
 note right of Alumno::validarEdad
   Valida que la edad esté entre
-  16 y 100 años
+  1 y 150 años
 end note
 
 @enduml
@@ -258,21 +264,26 @@ end note
 |AlumnoInvalidoException
 
 |Edad
-|Debe estar entre 16 y 100 años (inclusive)
+|Debe ser un número positivo entre 1 y 150 (inclusive)
 |AlumnoInvalidoException
 
 |Estado
-|Debe ser ACTIVO o INACTIVO
+|No nulo. Debe ser ACTIVO o INACTIVO
 |AlumnoInvalidoException
 |===
 
 ==== Comportamientos del Dominio
 
-- `estaActivo()`: Determina si el alumno está en estado ACTIVO
-- `activar()`: Cambia el estado del alumno a ACTIVO
-- `desactivar()`: Cambia el estado del alumno a INACTIVO
-- `actualizarEdad()`: Actualiza la edad del alumno con validación
-- `validar()`: Ejecuta todas las validaciones de dominio para garantizar la integridad
+- `estaActivo()`: Retorna true si el estado actual es ACTIVO
+- `activar()`: Asigna el estado del alumno a ACTIVO
+- `desactivar()`: Asigna el estado del alumno a INACTIVO
+- `actualizarEdad(Integer)`: Actualiza la edad del alumno aplicando las validaciones del dominio
+- `validar()`: Ejecuta las validaciones de id, nombre, apellido, edad y estado sobre la instancia
+
+[NOTE]
+====
+Además de estos comportamientos, los setters (`setId`, `setNombre`, `setApellido`, `setEdad`, `setEstado`) invocan sus validaciones correspondientes antes de asignar el valor.
+====
 
 ==== Arquitectura No-Anémica
 
@@ -338,7 +349,7 @@ deactivate adapter
 service --> controller: Alumno
 deactivate service
 controller -> controller: convertir a AlumnoResponseDTO
-controller --> client: 200 OK\n{AlumnoResponseDTO}
+controller --> client: 201 Created
 deactivate controller
 
 note over service: Si el ID ya existe,\nlanza AlumnoYaExisteException
@@ -473,8 +484,8 @@ skinparam entity {
 entity "alumnos" {
   * id : BIGINT <<PK>>
   --
-  * nombre : VARCHAR(255)
-  * apellido : VARCHAR(255)
+  * nombre : VARCHAR(100)
+  * apellido : VARCHAR(100)
   * estado : VARCHAR(20)
   * edad : INTEGER
 }
@@ -486,7 +497,7 @@ note right of alumnos::estado
 end note
 
 note right of alumnos::edad
-  Rango válido: 16-100
+  Rango válido: 1-150
 end note
 
 @enduml
@@ -498,27 +509,30 @@ El proyecto utiliza Liquibase para el control de versiones del esquema de base d
 
 ==== Estructura de Archivos de Migración
 
-```
+[source,text]
+----
 src/main/resources/db/
 ├── changelog/
-│   ├── db.changelog-master.yaml          # Archivo principal
-│   ├── 001-create-alumnos-table.yaml     # Creación de tabla
+│   ├── db.changelog-master.xml           # Archivo principal
+│   ├── 001-create-alumnos.xml            # Creación de tabla
+│   ├── 002-insert-alumnos-data.xml       # Carga de datos
 │   └── alumnos-data.csv                  # Datos de ejemplo
-```
+----
 
 ==== Configuración de R2DBC
 
 La aplicación está configurada para usar R2DBC con H2:
 
-```yaml
+[source,yaml]
+----
 spring:
   r2dbc:
     url: r2dbc:h2:mem:///testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     username: sa
     password: ""
   liquibase:
-    change-log: classpath:db/changelog/db.changelog-master.yaml
-```
+    change-log: classpath:db/changelog/db.changelog-master.xml
+----
 
 == API REST Detallada
 
@@ -545,7 +559,7 @@ client --> getActive
 note right of create
   Content-Type: application/json
   Body: AlumnoRequestDTO
-  Response: AlumnoResponseDTO
+  Response: 201 Created (sin cuerpo)
 end note
 
 note right of getActive
@@ -600,7 +614,7 @@ end note
 |edad
 |Integer
 |Edad del alumno
-|16-100 años
+|1-150 años
 |===
 
 ==== AlumnoResponseDTO
@@ -633,17 +647,8 @@ curl -X POST "http://localhost:8080/api/alumnos" \
   }'
 ----
 
-*Respuesta exitosa (200 OK):*
-[source,json]
-----
-{
-  "id": 100,
-  "nombre": "María",
-  "apellido": "González",
-  "estado": "ACTIVO",
-  "edad": 22
-}
-----
+*Respuesta exitosa (201 Created):*
+Sin cuerpo
 
 ==== Obtener Alumnos Activos (Paginado)
 
@@ -682,7 +687,7 @@ curl "http://localhost:8080/api/alumnos/activos?page=1&size=5"
 |ALUMNO_INVALIDO
 |Datos del alumno no válidos
 |400
-|Edad fuera del rango 16-100
+|Edad fuera del rango 1-150
 
 |ALUMNO_YA_EXISTE
 |ID de alumno duplicado
@@ -713,24 +718,21 @@ La aplicación se configura principalmente a través de `application.yaml`:
 
 [source,yaml]
 ----
-server:
-  port: 8080
-
 spring:
   application:
     name: webflux-alumnos
-    
+
   r2dbc:
     url: r2dbc:h2:mem:///testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     username: sa
     password: ""
-    
+
   liquibase:
-    change-log: classpath:db/changelog/db.changelog-master.yaml
-    
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
 springdoc:
   api-docs:
-    path: /api-docs
+    path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
 
@@ -848,7 +850,8 @@ Spring Boot Actuator proporciona endpoints para monitoreo:
 
 ==== Configuración de Actuator
 
-```yaml
+[source,yaml]
+----
 management:
   endpoints:
     web:
@@ -861,7 +864,7 @@ management:
   info:
     env:
       enabled: true
-```
+----
 
 === Logs Estructurados
 
@@ -909,4 +912,3 @@ Indicadores clave a monitorear:
 - Throughput (requests/segundo)
 - Utilización de memoria
 - Conexiones de base de datos activas
-

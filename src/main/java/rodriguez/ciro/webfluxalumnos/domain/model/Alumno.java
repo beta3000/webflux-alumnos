@@ -80,7 +80,6 @@ public class Alumno {
     this.edad = edad;
   }
 
-  // Business methods
   public boolean estaActivo() {
     return Estado.ACTIVO.equals(this.estado);
   }
@@ -98,7 +97,6 @@ public class Alumno {
     this.edad = nuevaEdad;
   }
 
-  // Validation methods - Domain business rules
   public void validar() {
     validarId(this.id);
     validarNombre(this.nombre);

@@ -18,7 +18,6 @@ public class CrearAlumnoService implements CrearAlumnoUseCase {
 
   @Override
   public Mono<Void> crearAlumno(Alumno alumno) {
-    // Use domain validation
     return Mono.fromRunnable(alumno::validar)
         .then(Mono.defer(() -> verificarIdNoExiste(alumno.getId())))
         .then(Mono.defer(() -> alumnoRepository.save(alumno)));
