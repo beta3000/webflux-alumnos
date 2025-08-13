@@ -1,0 +1,108 @@
+= WebFlux Alumnos
+Ciro Rodriguez <ciro@example.com>
+:revnumber: v1.0
+:toc: left
+:sectnums:
+:icons: font
+:source-highlighter: highlightjs
+:doctype: book
+:imagesdir: diagrams
+
+== Resumen
+
+Aplicación Spring Boot WebFlux para gestión de alumnos con R2DBC + H2 y Liquibase.
+
+- Arquitectura hexagonal (puertos/adaptadores)
+- WebFlux/Reactor (Mono/Flux)
+- Persistencia reactiva con R2DBC
+- Migraciones con Liquibase
+- Calidad de código: Spotless, SpotBugs/FindSecBugs
+- Cobertura con JaCoCo
+
+== Arquitectura
+
+El sistema sigue una arquitectura hexagonal con casos de uso en aplicación y adaptadores de entrada/salida.
+
+[plantuml, arquitectura, png]
+----
+@startuml
+skinparam componentStyle rectangle
+package "Aplicación" {
+  [CrearAlumnoService]
+  [ObtenerAlumnosActivosService]
+}
+package "Dominio" {
+  [Alumno]
+  [Excepciones]
+}
+package "Entrada (Web)" {
+  [AlumnoController]
+  [GlobalExceptionHandler]
+}
+package "Salida (Persistencia)" {
+  [AlumnoRepositoryAdapter]
+  [AlumnoEntity]
+  [AlumnoR2dbcRepository]
+}
+[AlumnoController] --> [CrearAlumnoService]
+[AlumnoController] --> [ObtenerAlumnosActivosService]
+[CrearAlumnoService] --> [AlumnoRepositoryAdapter]
+[ObtenerAlumnosActivosService] --> [AlumnoRepositoryAdapter]
+[AlumnoRepositoryAdapter] --> [AlumnoR2dbcRepository]
+[AlumnoRepositoryAdapter] --> [AlumnoEntity]
+@enduml
+----
+
+== Modelo de Dominio
+
+[plantuml, dominio, png]
+----
+@startuml
+class Alumno {
+  +Long id
+  +String nombre
+  +String apellido
+  +Estado estado
+  +Integer edad
+}
+
+enum Estado {
+  ACTIVO
+  INACTIVO
+}
+@enduml
+----
+
+== Endpoints
+
+[plantuml, endpoints, png]
+----
+@startuml
+skinparam ArrowColor #4e79a7
+skinparam ActorStyle awesome
+actor Usuario
+rectangle API {
+  Usuario -> (POST /alumnos)
+  Usuario -> (GET /alumnos?page=&size=)
+}
+@enduml
+----
+
+== Errores y manejo global
+
+- ALUMNO_INVALIDO: validaciones de dominio o IllegalArgumentException
+- ALUMNO_YA_EXISTE: creación con ID duplicado
+- PARAMETROS_INVALIDOS: parámetros de request inválidos (ServerWebInputException)
+- DATOS_INVALIDOS: errores de binding/JSON
+- ERROR_INTERNO: fallback
+
+== Configuración y build
+
+- Java 17, Spring Boot 3.5.4
+- Ejecutar tests y verificación: `./mvnw verify`
+- Generar cobertura: se publica en `target/site/jacoco/index.html`
+- Generar documentación (perfil docs): `./mvnw -Pdocs prepare-package`
+
+== Diagramas
+
+Los diagramas se generan con asciidoctor-diagram (PlantUML). Se renderizan a PNG en `target/docs/diagrams`.
