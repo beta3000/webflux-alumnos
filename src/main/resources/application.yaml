@@ -1,14 +1,33 @@
-spring.application.name=webflux-alumnos
-# Configuración de Liquibase
-spring.liquibase.change-log=classpath:db.changelog-master.xml
+spring:
+  application:
+    name: webflux-alumnos
 
-# Configuración de la base de datos H2 para R2DBC (WebFlux)
-spring.r2dbc.url=r2dbc:h2:mem:///alumnosdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-spring.r2dbc.username=sa
-spring.r2dbc.password=
+  # Conexion reactiva (R2DBC)
+  r2dbc:
+    url: r2dbc:h2:mem:///testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+    pool:
+      enabled: true
 
-# Configuración JDBC para Liquibase (necesario para migraciones)
-spring.datasource.url=jdbc:h2:mem:alumnosdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-spring.datasource.driver-class-name=org.h2.Driver
-spring.datasource.username=sa
-spring.datasource.password=
+  # Liquibase usando JDBC
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    user: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  h2:
+    console:
+      enabled: true
+
+logging:
+  level:
+    org.springframework.r2dbc: DEBUG
+    rodriguez.ciro.webfluxalumnos: DEBUG
+    liquibase: DEBUG
+
+server:
+  port: 8080

@@ -6,7 +6,6 @@ Ciro Rodriguez <ciro@example.com>
 :icons: font
 :source-highlighter: highlightjs
 :doctype: book
-:imagesdir: diagrams
 
 == Resumen
 
@@ -101,8 +100,4 @@ rectangle API {
 - Java 17, Spring Boot 3.5.4
 - Ejecutar tests y verificación: `./mvnw verify`
 - Generar cobertura: se publica en `target/site/jacoco/index.html`
-- Generar documentación (perfil docs): `./mvnw -Pdocs prepare-package`
 
-== Diagramas
-
-Los diagramas se generan con asciidoctor-diagram (PlantUML). Se renderizan a PNG en `target/docs/diagrams`.

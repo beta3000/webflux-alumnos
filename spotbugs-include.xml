@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!-- Incluir análisis de seguridad -->
+    <Match>
+        <Bug category="SECURITY"/>
+    </Match>
+
+    <!-- Incluir análisis de performance -->
+    <Match>
+        <Bug category="PERFORMANCE"/>
+    </Match>
+
+    <!-- Incluir análisis de correctitud -->
+    <Match>
+        <Bug category="CORRECTNESS"/>
+    </Match>
+
+    <!-- Incluir análisis de malas prácticas -->
+    <Match>
+        <Bug category="BAD_PRACTICE"/>
+    </Match>
+
+    <!-- Incluir análisis de código maloliente -->
+    <Match>
+        <Bug category="STYLE"/>
+    </Match>
+
+    <!-- Incluir análisis específico para aplicaciones web -->
+    <Match>
+        <Class name="~.*\.controller\..*"/>
+    </Match>
+
+    <!-- Incluir análisis específico para servicios -->
+    <Match>
+        <Class name="~.*\.service\..*"/>
+    </Match>
+
+    <!-- Incluir análisis específico para repositorios -->
+    <Match>
+        <Class name="~.*\.repository\..*"/>
+    </Match>
+</FindBugsFilter>
+

@@ -1,37 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
-        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
-    <changeSet id="001-create-alumnos-table" author="Ciro Rodriguez">
-        <createTable tableName="alumnos">
-            <column name="id" type="VARCHAR(40)">
-                <constraints primaryKey="true" nullable="false"/>
-            </column>
-            <column name="nombre" type="VARCHAR(100)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="apellido" type="VARCHAR(100)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="estado" type="VARCHAR(10)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="edad" type="INT">
-                <constraints nullable="false"/>
-            </column>
-        </createTable>
-        <sql>
-            ALTER TABLE alumnos
-                ADD CONSTRAINT chk_edad_range CHECK (edad BETWEEN 1 AND 120);
-            ALTER TABLE alumnos
-                ADD CONSTRAINT chk_estado CHECK (estado IN ('activo', 'inactivo'));
-        </sql>
-        <createIndex indexName="idx_alumnos_estado" tableName="alumnos">
-            <column name="estado"/>
-        </createIndex>
-    </changeSet>
+	<changeSet id="001-create-alumnos-table"
+		author="ciro.rodriguez">
+		<createTable tableName="alumnos">
+			<column name="id" type="BIGINT" autoIncrement="false">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+			<column name="nombre" type="VARCHAR(100)">
+				<constraints nullable="false" />
+			</column>
+			<column name="apellido" type="VARCHAR(100)">
+				<constraints nullable="false" />
+			</column>
+			<column name="estado" type="VARCHAR(20)">
+				<constraints nullable="false" />
+			</column>
+			<column name="edad" type="INTEGER">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+	</changeSet>
 
 </databaseChangeLog>

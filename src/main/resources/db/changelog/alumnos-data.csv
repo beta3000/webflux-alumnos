@@ -1,0 +1,11 @@
+id,nombre,apellido,estado,edad
+1,Juan,Perez,ACTIVO,20
+2,Ana,Gomez,INACTIVO,22
+3,Luis,Martinez,ACTIVO,19
+4,Carla,Ramirez,ACTIVO,21
+5,Pedro,Lopez,INACTIVO,23
+6,Lucia,Diaz,ACTIVO,24
+7,Jose,Garcia,ACTIVO,25
+8,Elena,Suarez,INACTIVO,26
+9,Diego,Castro,ACTIVO,27
+10,Paula,Morales,ACTIVO,28

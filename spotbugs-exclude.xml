@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!-- Excluir clases generadas automáticamente -->
+    <Match>
+        <Class name="~.*\..*Application"/>
+        <Bug pattern="DM_EXIT"/>
+    </Match>
+
+    <!-- Excluir warnings de serialización en DTOs/Entities -->
+    <Match>
+        <Class name="~.*\.domain\.model\..*"/>
+        <Bug pattern="SE_NO_SERIALVERSIONID"/>
+    </Match>
+
+    <!-- Excluir warnings de constructor en Spring Boot Application -->
+    <Match>
+        <Class name="~.*Application"/>
+        <Method name="main"/>
+        <Bug pattern="DM_EXIT"/>
+    </Match>
+
+    <!-- Excluir archivos de test de ciertos warnings -->
+    <Match>
+        <Class name="~.*Test.*"/>
+        <Bug pattern="RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT"/>
+    </Match>
+
+    <!-- Excluir warnings de configuración de Spring -->
+    <Match>
+        <Class name="~.*\.config\..*"/>
+        <Bug pattern="UWF_UNWRITTEN_FIELD"/>
+    </Match>
+
+    <!-- Excluir warnings de Spring endpoints - son parte normal de la arquitectura -->
+    <Match>
+        <Class name="~.*\.controller\..*"/>
+        <Bug pattern="SPRING_ENDPOINT"/>
+    </Match>
+
+    <!-- Excluir warnings de Spring endpoints específicamente en web adapters -->
+    <Match>
+        <Class name="~.*\.adapter\.in\.web\..*"/>
+        <Bug pattern="SPRING_ENDPOINT"/>
+    </Match>
+</FindBugsFilter>
