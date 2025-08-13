@@ -23,6 +23,15 @@ spring:
     console:
       enabled: true
 
+springdoc:
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  show-actuator: false
+
 logging:
   level:
     org.springframework.r2dbc: DEBUG
