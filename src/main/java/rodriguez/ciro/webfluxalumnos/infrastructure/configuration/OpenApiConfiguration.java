@@ -15,7 +15,8 @@ import org.springframework.context.annotation.Configuration;
             title = "WebFlux Alumnos API",
             description = "API REST para gestión de alumnos utilizando Spring WebFlux",
             version = "1.0.0",
-            contact = @Contact(name = "Ciro Rodriguez", email = "ciro.julio.rodriguez.valerio@gmail.com"),
+            contact =
+                @Contact(name = "Ciro Rodriguez", email = "ciro.julio.rodriguez.valerio@gmail.com"),
             license = @License(name = "MIT License", url = "https://opensource.org/licenses/MIT")),
     servers = {@Server(description = "Development Server", url = "http://localhost:8080")})
 public class OpenApiConfiguration {
