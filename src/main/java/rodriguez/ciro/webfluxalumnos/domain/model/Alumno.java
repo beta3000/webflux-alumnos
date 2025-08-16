@@ -1,6 +1,7 @@
 package rodriguez.ciro.webfluxalumnos.domain.model;
 
 import java.util.Objects;
+import rodriguez.ciro.webfluxalumnos.domain.exception.AlumnoInvalidoException;
 
 public class Alumno {
   private Long id;
@@ -10,8 +11,18 @@ public class Alumno {
   private Integer edad;
 
   public enum Estado {
-    ACTIVO,
-    INACTIVO
+    ACTIVO("Activo"),
+    INACTIVO("Inactivo");
+
+    private final String descripcion;
+
+    Estado(String descripcion) {
+      this.descripcion = descripcion;
+    }
+
+    public String getDescripcion() {
+      return descripcion;
+    }
   }
 
   public Alumno() {}
@@ -29,6 +40,7 @@ public class Alumno {
   }
 
   public void setId(Long id) {
+    validarId(id);
     this.id = id;
   }
 
@@ -37,6 +49,7 @@ public class Alumno {
   }
 
   public void setNombre(String nombre) {
+    validarNombre(nombre);
     this.nombre = nombre;
   }
 
@@ -45,6 +58,7 @@ public class Alumno {
   }
 
   public void setApellido(String apellido) {
+    validarApellido(apellido);
     this.apellido = apellido;
   }
 
@@ -53,6 +67,7 @@ public class Alumno {
   }
 
   public void setEstado(Estado estado) {
+    validarEstado(estado);
     this.estado = estado;
   }
 
@@ -61,7 +76,64 @@ public class Alumno {
   }
 
   public void setEdad(Integer edad) {
+    validarEdad(edad);
     this.edad = edad;
+  }
+
+  public boolean estaActivo() {
+    return Estado.ACTIVO.equals(this.estado);
+  }
+
+  public void activar() {
+    this.estado = Estado.ACTIVO;
+  }
+
+  public void desactivar() {
+    this.estado = Estado.INACTIVO;
+  }
+
+  public void actualizarEdad(Integer nuevaEdad) {
+    validarEdad(nuevaEdad);
+    this.edad = nuevaEdad;
+  }
+
+  public void validar() {
+    validarId(this.id);
+    validarNombre(this.nombre);
+    validarApellido(this.apellido);
+    validarEdad(this.edad);
+    validarEstado(this.estado);
+  }
+
+  private void validarId(Long id) {
+    if (id == null || id <= 0) {
+      throw new AlumnoInvalidoException("El ID del alumno debe ser un número positivo");
+    }
+  }
+
+  private void validarNombre(String nombre) {
+    if (nombre == null || nombre.trim().isEmpty()) {
+      throw new AlumnoInvalidoException("El nombre es obligatorio");
+    }
+  }
+
+  private void validarApellido(String apellido) {
+    if (apellido == null || apellido.trim().isEmpty()) {
+      throw new AlumnoInvalidoException("El apellido es obligatorio");
+    }
+  }
+
+  private void validarEdad(Integer edad) {
+    if (edad == null || edad <= 0 || edad > 150) {
+      throw new AlumnoInvalidoException(
+          "La edad del alumno debe ser un número positivo menor a 150");
+    }
+  }
+
+  private void validarEstado(Estado estado) {
+    if (estado == null) {
+      throw new AlumnoInvalidoException("El estado del alumno es obligatorio");
+    }
   }
 
   @Override
