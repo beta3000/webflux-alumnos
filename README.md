@@ -63,15 +63,8 @@ curl -X POST "http://localhost:8080/api/alumnos" \
 
 ## 📚 Documentación Completa
 
-### Generar Documentación
-```bash
-# Generar HTML + diagramas PlantUML
-./mvnw -Pdocs clean prepare-package
+La documentación se encuentra en el directorio `docs/` y está generada con AsciiDoc. Incluye:
 
-# Archivos generados:
-# - target/docs/index.html        (documentación principal)
-# - target/docs/diagrams/*.png    (diagramas)
-```
 
 ### Contenido de la Documentación
 - **Arquitectura Hexagonal**: Diagramas detallados de componentes y capas
@@ -90,7 +83,7 @@ src/main/java/rodriguez/ciro/webfluxalumnos/
 ├── domain/                          # 🏛️ Capa de Dominio
 │   ├── model/Alumno.java           # Modelo de negocio
 │   └── exception/                   # Excepciones de dominio
-├── application/                     # ⚙️ Capa de Aplicación  
+├── application/                     # ⚙️ Capa de Aplicación
 │   ├── port/in/                    # Puertos de entrada (casos de uso)
 │   ├── port/out/                   # Puertos de salida (repositorios)
 │   └── service/                    # Implementación de casos de uso
@@ -120,17 +113,17 @@ src/main/java/rodriguez/ciro/webfluxalumnos/
 {
   "id": 100,
   "nombre": "María",
-  "apellido": "González", 
+  "apellido": "González",
   "estado": "ACTIVO",
   "edad": 22
 }
 
-// Response 200 OK
+// Response 201 OK
 {
   "id": 100,
   "nombre": "María",
   "apellido": "González",
-  "estado": "ACTIVO", 
+  "estado": "ACTIVO",
   "edad": 22
 }
 ```
@@ -189,23 +182,6 @@ src/main/resources/db/changelog/
 └── alumnos-data.csv                  # Datos de ejemplo
 ```
 
-## 🚀 Despliegue
-
-### Desarrollo
-```bash
-# Ejecutar en modo desarrollo con hot-reload
-./mvnw spring-boot:run -Dspring-boot.run.jvmArguments="-Dspring.profiles.active=dev"
-```
-
-### Producción
-```bash
-# Crear JAR ejecutable
-./mvnw clean package -DskipTests
-
-# Ejecutar aplicación
-java -jar target/webflux-alumnos-0.0.1-SNAPSHOT.jar
-```
-
 ### Configuración de Ambiente
 ```yaml
 # application.yaml
@@ -232,7 +208,7 @@ logging:
 
 ### OpenAPI/Swagger
 - **Swagger UI**: `http://localhost:8080/swagger-ui.html`
-- **API Docs**: `http://localhost:8080/api-docs`
+- **API Docs**: `http://localhost:8080/v3/api-docs`
 
 ## 🤝 Contribución
 
