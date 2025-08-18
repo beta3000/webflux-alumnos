@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -49,6 +50,7 @@ public class AlumnoController {
               required = true,
               content = @Content(schema = @Schema(implementation = AlumnoRequestDTO.class)))
           @RequestBody
+          @Valid
           AlumnoRequestDTO request) {
     return crearAlumnoUseCase
         .crearAlumno(request.toDomain())
