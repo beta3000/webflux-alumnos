@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.bind.support.WebExchangeBindException;
 import rodriguez.ciro.webfluxalumnos.domain.exception.AlumnoInvalidoException;
 import rodriguez.ciro.webfluxalumnos.domain.exception.AlumnoYaExisteException;
 
@@ -28,6 +29,18 @@ public class GlobalExceptionHandler {
     logger.error("Alumno inválido: ", ex);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
         .body(createErrorResponse("ALUMNO_INVALIDO", ex.getMessage()));
+  }
+
+  @ExceptionHandler(WebExchangeBindException.class)
+  public ResponseEntity<Map<String, Object>> handleValidationException(
+      WebExchangeBindException ex) {
+    logger.error("Alumno inválido (validación): ", ex);
+    String mensaje =
+        ex.getFieldErrors().isEmpty()
+            ? "Datos inválidos"
+            : ex.getFieldErrors().get(0).getDefaultMessage();
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(createErrorResponse("ALUMNO_INVALIDO", mensaje));
   }
 
   @ExceptionHandler(org.springframework.web.server.ServerWebInputException.class)
