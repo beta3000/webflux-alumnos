@@ -19,8 +19,11 @@ public class AlumnoRequestDTO {
   @Schema(description = "Apellido del alumno", example = "Pérez")
   private final String apellido;
 
-  @NotBlank
-  @Pattern(regexp = "ACTIVO|INACTIVO", message = "El estado debe ser ACTIVO o INACTIVO")
+  @NotBlank(message = "El estado es obligatorio")
+  @Pattern(
+      regexp = "^(ACTIVO|INACTIVO)$",
+      flags = Pattern.Flag.CASE_INSENSITIVE,
+      message = "El estado debe ser ACTIVO o INACTIVO")
   @Schema(
       description = "Estado del alumno",
       example = "ACTIVO",
